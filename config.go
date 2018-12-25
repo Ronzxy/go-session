@@ -13,10 +13,9 @@
 package session
 
 type Config struct {
-	Type           string `json:"Type"`
-	CookieName     string `json:"cookieName"`
-	GcLifeTime     int64  `json:"gclifetime"`
-	ProviderConfig string `json:"ProviderConfig"`
+	Type string `json:"Type"`
+
+	*ManagerConfig
 }
 
 // eg.

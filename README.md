@@ -1,79 +1,114 @@
-Session
-===========
+session
+==============
 
-Session handler usage 'beego session'.
+session is a Go session manager. It can use many session providers. Just like the `database/sql` and `database/sql/driver`.
 
-### Usage
+## How to install?
 
-``` golang
-package main
+	go get github.com/astaxie/beego/session
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"time"
 
-	"github.com/gin-gonic/gin"
-	"openeasy.net/openeasy/session"
-)
+## What providers are supported?
 
-func main() {
-	var (
-		str  string = `{"Type": "memory", "cookieName": "gosessionsid", "gclifetime": 3600, "ProviderConfig": ""}`
-		conf session.Config
-		err  error
+As of now this session manager support memory, file, Redis and MySQL.
+
+
+## How to use it?
+
+First you must import it
+
+	import (
+		"github.com/astaxie/beego/session"
 	)
 
-	err = json.Unmarshal([]byte(str), &conf)
-	if err != nil {
-		// 解析配置文件
-		fmt.Println("json.Unmarshal", err.Error())
-		return
-	}
+Then in you web app init the global session manager
+	
+	var globalSessions *session.Manager
 
-	// 初始化sessions
-	err = session.NewManager(conf)
-	if err != nil {
-		fmt.Println("Session", err.Error())
-	}
+* Use **memory** as provider:
 
-	// 获取Gin默认实例
-	r := gin.Default()
-	// 添加路由
-	r.GET("/", func(ctx *gin.Context) {
-		s, _ := session.GetInst(ctx.Writer, ctx.Request)
-		v := s.Get("userName")
-		switch {
-		case v != nil:
-			{
-				ctx.String(200, "UserName: %s", v.(string))
-			}
-		default:
-			{
-				ctx.String(200, "Nothing")
-			}
+		func init() {
+			globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid","gclifetime":3600}`)
+			go globalSessions.GC()
 		}
 
-	})
+* Use **file** as provider, the last param is the path where you want file to be stored:
 
-	r.GET("/login", func(ctx *gin.Context) {
-		s, _ := session.GetInst(ctx.Writer, ctx.Request)
-		s.Set("userName", "I'm the userName.")
+		func init() {
+			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"./tmp"}`)
+			go globalSessions.GC()
+		}
 
-		ctx.String(200, "OK")
-	})
-	// 设置http服务
-	s := &http.Server{
-		Addr:           ":8080",
-		Handler:        r,
-		ReadTimeout:    30 * time.Second,
-		WriteTimeout:   30 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+* Use **Redis** as provider, the last param is the Redis conn address,poolsize,password:
+
+		func init() {
+			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:6379,100,astaxie"}`)
+			go globalSessions.GC()
+		}
+		
+* Use **MySQL** as provider, the last param is the DSN, learn more from [mysql](https://github.com/go-sql-driver/mysql#dsn-data-source-name):
+
+		func init() {
+			globalSessions, _ = session.NewManager(
+				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"username:password@protocol(address)/dbname?param=value"}`)
+			go globalSessions.GC()
+		}
+
+* Use **Cookie** as provider:
+
+		func init() {
+			globalSessions, _ = session.NewManager(
+				"cookie", `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`)
+			go globalSessions.GC()
+		}
+
+
+Finally in the handlerfunc you can use it like this
+
+	func login(w http.ResponseWriter, r *http.Request) {
+		sess := globalSessions.SessionStart(w, r)
+		defer sess.SessionRelease(w)
+		username := sess.Get("username")
+		fmt.Println(username)
+		if r.Method == "GET" {
+			t, _ := template.ParseFiles("login.gtpl")
+			t.Execute(w, nil)
+		} else {
+			fmt.Println("username:", r.Form["username"])
+			sess.Set("username", r.Form["username"])
+			fmt.Println("password:", r.Form["password"])
+		}
 	}
-	s.ListenAndServe()
-}
-```
 
-### Session Manager: What providers are supported?
-See <a href="https://github.com/astaxie/beego/tree/master/session">Beego Session</a>
+
+## How to write own provider?
+
+When you develop a web app, maybe you want to write own provider because you must meet the requirements.
+
+Writing a provider is easy. You only need to define two struct types 
+(Session and Provider), which satisfy the interface definition. 
+Maybe you will find the **memory** provider is a good example.
+
+	type SessionStore interface {
+		Set(key, value interface{}) error     //set session value
+		Get(key interface{}) interface{}      //get session value
+		Delete(key interface{}) error         //delete session value
+		SessionID() string                    //back current sessionID
+		SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
+		Flush() error                         //delete all data
+	}
+	
+	type Provider interface {
+		SessionInit(gclifetime int64, config string) error
+		SessionRead(sid string) (SessionStore, error)
+		SessionExist(sid string) bool
+		SessionRegenerate(oldsid, sid string) (SessionStore, error)
+		SessionDestroy(sid string) error
+		SessionAll() int //get all active session
+		SessionGC()
+	}
+
+
+## LICENSE
+
+BSD License http://creativecommons.org/licenses/BSD/
