@@ -87,20 +87,20 @@ func GetProvider(name string) (Provider, error) {
 
 // ManagerConfig define the session config
 type ManagerConfig struct {
-	CookieName              string `json:"cookieName"`
-	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
-	Gclifetime              int64  `json:"gclifetime"`
-	Maxlifetime             int64  `json:"maxLifetime"`
-	DisableHTTPOnly         bool   `json:"disableHTTPOnly"`
-	Secure                  bool   `json:"secure"`
-	CookieLifeTime          int    `json:"cookieLifeTime"`
-	ProviderConfig          string `json:"providerConfig"`
-	Domain                  string `json:"domain"`
-	SessionIDLength         int64  `json:"sessionIDLength"`
-	EnableSidInHTTPHeader   bool   `json:"EnableSidInHTTPHeader"`
-	SessionNameInHTTPHeader string `json:"SessionNameInHTTPHeader"`
-	EnableSidInURLQuery     bool   `json:"EnableSidInURLQuery"`
-	SessionIDPrefix         string `json:"sessionIDPrefix"`
+	CookieName              string `yaml:"CookieName"`
+	EnableSetCookie         bool   `yaml:"EnableSetCookie,omitempty"`
+	Gclifetime              int64  `yaml:"Gclifetime"`
+	Maxlifetime             int64  `yaml:"MaxLifetime"`
+	DisableHTTPOnly         bool   `yaml:"DisableHTTPOnly"`
+	Secure                  bool   `yaml:"Secure"`
+	CookieLifeTime          int    `yaml:"CookieLifeTime"`
+	ProviderConfig          string `yaml:"ProviderConfig"`
+	Domain                  string `yaml:"Domain"`
+	SessionIDLength         int64  `yaml:"SessionIDLength"`
+	EnableSidInHTTPHeader   bool   `yaml:"EnableSidInHTTPHeader"`
+	SessionNameInHTTPHeader string `yaml:"SessionNameInHTTPHeader"`
+	EnableSidInURLQuery     bool   `yaml:"EnableSidInURLQuery"`
+	SessionIDPrefix         string `yaml:"SessionIDPrefix"`
 }
 
 // Manager contains Provider and its configuration.

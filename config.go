@@ -13,13 +13,7 @@
 package session
 
 type Config struct {
-	Type string `json:"Type"`
+	Type string `yaml:"Type"`
 
 	*ManagerConfig
 }
-
-// eg.
-// {"Type": "memory", "cookieName": "gosessionsid", "gclifetime": 3600, "ProviderConfig": ""}
-// {"Type": "file", "cookieName": "gosessionsid", "gclifetime": 3600, "ProviderConfig": "./tmp"}
-// {"Type": "redis", "cookieName": "gosessionsid", "gclifetime": 3600, "ProviderConfig": "127.0.0.1:6379,100,sessions"}
-// {"Type": "mysql", "cookieName": "gosessionsid", "gclifetime": 3600, "ProviderConfig": "username:password@protocol(address)/dbname?param=value"}
