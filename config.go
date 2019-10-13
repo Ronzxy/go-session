@@ -12,8 +12,12 @@
 
 package session
 
+import (
+	"github.com/astaxie/beego/session"
+)
+
 type Config struct {
 	Type string `yaml:"Type"`
 
-	*ManagerConfig
+	*session.ManagerConfig
 }
